@@ -1,4 +1,6 @@
-#bfastmonitor_cpu
+#bfastmonitor_gpu
+
+This is a repo with work originally done by Derek Van de Ven and available here:  from 
 
 This github repository contains scripts for using the python bfast algorithm in SEPAL. 
 
