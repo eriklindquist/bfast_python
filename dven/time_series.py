@@ -8,8 +8,9 @@ import numpy as np
 from numpy import nan
 from numpy import isnan
 
-from bfast import BFASTMonitor
-from bfast.utils import crop_data_dates
+import bfast
+#from bfast import BFASTMonitor
+#from bfast.utils import crop_data_dates
 
 import pyopencl
 import inspect
@@ -51,6 +52,7 @@ class Timeseries:
         self.dir = time_series_path
         
         # Open the timeseries to extract geo-metadata
+        ###### CONSIDER REPLACING THIS PART WITH RASTERIO???? ######
         self.time_series = gdal.Open(self.name)
         self.geotransform = self.time_series.GetGeoTransform()
         
@@ -103,23 +105,25 @@ class Timeseries:
         block: numpy array, 3D numpy array to run bfast upon
         '''
         
-        data, self.cropped_dates = crop_data_dates(block, self.dates, self.start_hist, self.end_monitor)
+        data = block
+        #data, self.cropped_dates = crop_data_dates(block, self.dates, self.start_hist, self.end_monitor)
 
         # only apply on a small subset
         #data = data[:,:80,:80]
         
         # change nans to a number bfastmonitor-GPU can work with
         where_are_NaNs = isnan(data)
-        data[where_are_NaNs] = -32768
+        data[where_are_NaNs] = -32768 #0
 
         # fit model
-        self.model.fit(data, self.cropped_dates, nan_value = -32768) 
+        self.model.fit(data, self.dates, nan_value = -32768) 
         
         # save breaks and mean magnitudes
         breaks = self.model.breaks # index of date that has a break in dates
         means = self.model.means # magnitudes of breaks
         
         return(breaks,means)
+    
     
     def loop_blocks(self,x_block_size,y_block_size):
         
@@ -176,6 +180,7 @@ class Timeseries:
 
                     print(j,i,cols,rows)
 
+                    ##### CONSIDER REPLACING READASARRAY WITH RASTERIO??? #####
                     # first step creates the array
                     pbar2.update(1)
                     
@@ -215,7 +220,7 @@ class Timeseries:
             print("Fitting model over all blocks took {} seconds.".format(end_time - start_time))
             self.time_dict[self.name] = str(end_time - start_time) + " seconds"
 
-    def set_bfast_parameters(self, start_monitor, end_monitor, start_hist,freq,k,hfrac,trend,level,backend='opencl',verbose=1,device_id=0):
+    def set_bfast_parameters(self, start_monitor, end_monitor, start_hist,freq,k,hfrac,trend,level,backend='opencl',verbose=0,device_id=0):
         '''Set parameters, see bfast for what they do.. okay we should say this here
         
         parameters:
@@ -273,7 +278,7 @@ class Timeseries:
         self.verbose = verbose
         self.device_id = device_id
         
-        self.model = BFASTMonitor(
+        self.model = bfast.BFASTMonitor(
                     self.start_monitor,
                     freq=freq, # add these
                     k=k,
@@ -307,7 +312,7 @@ class Timeseries:
         print("verbose: The verbosity level (0=no output, 1=output): ", self.verbose)
         
     
-    def check_arrays(self, min_perc_lacking_data = 20,print_output=False):
+    def check_arrays(self, min_perc_lacking_data = 100,print_output=True):
         '''
         Checks the means and breaks arrays for amount of breaks, and means values. 
         
