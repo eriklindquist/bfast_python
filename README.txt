@@ -6,11 +6,16 @@ However, it is envisaged that this current repo will be actively maintained and 
 This github repository contains scripts for using the python bfast algorithm in SEPAL. 
 
 NOTEBOOKS
+- develop_rasterio_test.ipynb
+    Run BFAST with either python or opencl backends using rasterio functions for reading and writing rasters
+
+#### These are not working at the moment ####
 - bfastmonitor_GPU_stack.ipynb 
     If you want to run over a big data set in one go, you may run this code on a timeseries data set. 
 - bfastmonitor_GPU.ipynb
     This is a script for running over SEPAL time series tile directories within a time-series folder. 
-    
+
+#### This is also not working at the moment ####   
 FROM TERMINAL
 - bfastmonitor_GPU_stack.py -o [output_dir] -t [timeseries_dir]
     You can run bfast_stack.py from the terminal, the terminal will prompt the user for parameters.
@@ -34,6 +39,11 @@ PYTHON FUNCTIONS
 
 TIF OUTPUTS
 The scripts provide the following tif outputs
+
+- stored_time_series/[name of input]/[number of tile]/bfast_outputs.tif
+    This is a 2-band raster with Band 1 containing breakpoints in decimal year format. Band 2 contains magnitude. Raster is same width/height as original raster.
+
+#### At the moment, none of these other outputs are produced
 - breaks_indexed
     Indexes of the breaks, base output of bfastmonitor_GPU. -1 denotes no break is found. -2 denotes absence of enough data to find breaks.
 - breaks_binary
